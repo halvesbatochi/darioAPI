@@ -1,0 +1,17 @@
+{
+  "name": "darioapi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "config": "^3.3.9",
+    "consign": "^0.1.6",
+    "express": "^4.18.2"
+  }
+}
