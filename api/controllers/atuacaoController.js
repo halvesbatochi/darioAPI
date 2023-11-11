@@ -3,8 +3,9 @@ module.exports = () => {
     const db = require('../../config/database');
     const controller = {};
 
-    controller.listaAtuacoes = (req, res) => {
-        res.status(200).json({"mensagem":"Sucesso"});
+    controller.listaAtuacoes = async (req, res) => {
+        const response = await db.query("SELECT AD003_IT_ID, AD003_VC_DESC FROM AD.AD003 ORDER BY AD003_IT_ID");
+        res.status(200).send(response.rows);
     }
 
     controller.criarAtuacao = async (req, res) => {
