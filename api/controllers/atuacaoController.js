@@ -8,7 +8,7 @@ module.exports = () => {
     }
 
     controller.criarAtuacao = async (req, res) => {
-        const { nome } = req.body;
+        const { ent_vc_atuac } = req.body;
         const data = new Date().getTime();
         const { rows } = await db.query(
             "INSERT INTO AD.AD003 (ad003_vc_desc, ad003_dt_ultatu, ad003_dt_inclus) VALUES ($1, now(), now())",
