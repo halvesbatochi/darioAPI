@@ -1,0 +1,204 @@
+SET SEARCH_PATH TO AD;
+
+DROP TYPE IF EXISTS PAD001001_RESULTSET CASCADE;
+
+CREATE TYPE PAD001001_RESULTSET AS (
+   CD_ERRO     NUMERIC(3),
+   DS_ERRO     VARCHAR(255),
+   AD001_IT_ID NUMERIC
+);
+
+CREATE OR REPLACE FUNCTION PAD001001 (
+  /*-----------------------------------------------------------
+    Rotina para insert, update e delete de Instituições
+    voluntárias.
+   ------------------------------------------------------------*/
+   ENT_NR_VRS       NUMERIC(5)   , /* Stored procedure version */
+   ENT_VC_ACTION    CHAR(1)      , /* Action:                  */
+                                   /*    I - Insert            */
+                                   /*    U - Update            */
+                                   /*    D - Delete            */
+   ENT_IT_ID        NUMERIC      , /* ID Instituição           */
+   ENT_VC_RZSOCI    VARCHAR      , /* Razão Social             */
+   ENT_VC_NFANTA    VARCHAR      , /* Nome Fantasia            */
+   ENT_VC_BIOGRAF   VARCHAR(600) , /* Biografia                */
+   ENT_VC_END       VARCHAR      , /* Endereço                 */
+   ENT_IT_NUM       NUMERIC      , /* Número do endereço       */
+   ENT_VC_COMPL     VARCHAR      , /* Complemento              */
+   ENT_VC_BAIRRO    VARCHAR      , /* Bairro                   */
+   ENT_VC_CIDADE    VARCHAR      , /* Cidade                   */
+   ENT_VC_CEP       VARCHAR(8)   , /* CEP                      */
+   ENT_VC_ESTADO    VARCHAR(2)   , /* Estado                   */
+   ENT_VC_EMAIL     VARCHAR      , /* EMAIL                    */
+   ENT_VC_TELEFONE  VARCHAR      , /* Telefone                 */
+   ENT_VC_LOGIN     VARCHAR      , /* Login                    */
+   ENT_VC_SENHA     VARCHAR      , /* Senha                    */
+   ENT_DT_ABERTURA  NUMERIC(8,0) , /* Data da abertura         */
+   ENT_IT_ATUAC     NUMERIC      , /* Atuação                  */
+   ENT_VC_CNPJ      VARCHAR(14)  , /* CNPJ                     */
+   ENT_VC_INSCMUN   VARCHAR      , /* Inscrição Municipal      */
+   ENT_VC_INSCEST   VARCHAR      , /* Inscrição Estadual       */
+   ENT_VC_LOGO      VARCHAR      , /* Logo                     */
+   ENT_IT_SITUAC    NUMERIC(2)     /* Situação                 */
+                                   /*     0 - Inativo          */
+                                   /*     1 - Ativo            */
+)
+   RETURNS SETOF PAD001001_RESULTSET
+AS $$
+
+DECLARE
+    _R              AD.PAD001001_RESULTSET%Rowtype;
+    _CD_ERRO        NUMERIC;
+    _DS_ERRO        VARCHAR(255);
+
+BEGIN
+
+IF ENT_VC_ACTION = 'I' THEN
+
+    IF EXISTS (SELECT * FROM AD.AD001 WHERE AD001_VC_CNPJ = ENT_VC_CNPJ) THEN
+        RAISE EXCEPTION 'CNPJ JÁ CADASTRADO';
+    END IF;
+
+    INSERT INTO AD.AD001(
+        AD001_VC_RZSOCI,
+        AD001_VC_NFANTA,
+        AD001_VC_BIOGRAF,
+        AD001_VC_END,
+        AD001_IT_NUM,
+        AD001_VC_COMPL,
+        AD001_VC_BAIRRO,
+        AD001_VC_CIDADE,
+        AD001_VC_CEP,
+        AD001_VC_ESTADO,
+        AD001_VC_PAIS,
+        AD001_VC_EMAIL,
+        AD001_VC_TELEF,
+        AD001_VC_LOGIN,
+        AD001_VC_SENHA,
+        AD001_DT_ABERTURA,
+        AD001_IT_ATUAC,
+        AD001_VC_CNPJ,
+        AD001_VC_INSCMUN,
+        AD001_VC_INSCEST,
+        AD001_VC_LOGO,
+        AD001_IT_SITUAC,
+        AD001_DT_ULTATU,
+        AD001_DT_INCLUS
+    )
+    VALUES (ENT_VC_RZSOCI,
+            ENT_VC_NFANTA,
+            ENT_VC_BIOGRAF,
+            ENT_VC_END,
+            ENT_IT_NUM,
+            ENT_VC_COMPL,
+            ENT_VC_BAIRRO,
+            ENT_VC_CIDADE,
+            ENT_VC_CEP,
+            ENT_VC_ESTADO,
+            'BR',
+            ENT_VC_EMAIL,
+            ENT_VC_TELEFONE,
+            ENT_VC_LOGIN,
+            ENT_VC_SENHA,
+            ENT_DT_ABERTURA,
+            ENT_IT_ATUAC,
+            ENT_VC_CNPJ,
+            ENT_VC_INSCMUN,
+            ENT_VC_INSCEST,
+            ENT_VC_LOGO,
+            ENT_IT_SITUAC,
+            NOW(),
+            NOW());
+
+    _CD_ERRO := 0;
+    _DS_ERRO := 'OK';
+
+ELSIF ENT_VC_ACTION = 'U' THEN
+
+    IF ENT_IT_ID IS NULL OR ENT_IT_ID = 0 THEN
+        RAISE EXCEPTION 'INFORMAR O CÓDIGO DA INSTITUIÇÃO PARA ATUALIZAÇÃO';
+    END IF;
+
+    IF NOT EXISTS (SELECT * FROM AD.AD001 WHERE AD001_IT_ID = ENT_IT_ID) THEN
+        RAISE EXCEPTION 'INSTITUIÇÃO NÃO LOCALIZADA';
+    END IF;
+
+    UPDATE AD.AD001
+    SET AD001_VC_RZSOCI = ENT_VC_RZSOCI,
+        AD001_VC_NFANTA = ENT_VC_NFANTA,
+        AD001_VC_BIOGRAF = ENT_VC_BIOGRAF,
+        AD001_VC_END = ENT_VC_END,
+        AD001_IT_NUM = ENT_IT_NUM,
+        AD001_VC_COMPL = ENT_VC_COMPL,
+        AD001_VC_BAIRRO = ENT_VC_BAIRRO,
+        AD001_VC_CIDADE = ENT_VC_CIDADE,
+        AD001_VC_CEP = ENT_VC_CEP,
+        AD001_VC_ESTADO = ENT_VC_ESTADO,
+        AD001_VC_EMAIL = ENT_VC_EMAIL,
+        AD001_VC_TELEF = ENT_VC_TELEFONE,
+        AD001_VC_LOGIN = ENT_VC_LOGIN,
+        AD001_VC_SENHA = ENT_VC_SENHA,
+        AD001_IT_ATUAC = ENT_IT_ATUAC,
+        AD001_VC_CNPJ = ENT_VC_CNPJ,
+        AD001_VC_INSCMUN = ENT_VC_INSCMUN,
+        AD001_VC_INSCEST = ENT_VC_INSCEST,
+        AD001_VC_LOGO = ENT_VC_LOGO,
+        AD001_IT_SITUAC = ENT_IT_SITUAC,
+        AD001_DT_ULTATU = NOW()
+    WHERE
+        AD001_IT_ID = ENT_IT_ID;
+
+    _CD_ERRO := 0;
+    _DS_ERRO := 'OK';
+
+ELSE
+
+    IF ENT_IT_ID IS NULL OR ENT_IT_ID = 0 THEN
+        RAISE EXCEPTION 'INFORMAR O CÓDIGO DA INSTITUIÇÃO PARA DESATIVAÇÃO';
+    END IF;
+
+    IF NOT EXISTS (SELECT * FROM AD.AD001 WHERE AD001_IT_ID = ENT_IT_ID) THEN
+        RAISE EXCEPTION 'INSTITUIÇÃO NÃO LOCALIZADA';
+    END IF;
+
+    UPDATE
+        AD.AD001
+    SET
+        AD001_IT_SITUAC = 0,
+        AD001_DT_ULTATU = NOW()
+    WHERE
+        AD001_IT_ID = ENT_IT_ID;
+
+    _CD_ERRO := 0;
+    _DS_ERRO := 'OK';
+
+END IF;
+
+/*===========================================================================*/
+/*= RESULT SET                                                              =*/
+/*===========================================================================*/
+FOR _R IN
+  SELECT
+    _CD_ERRO,
+    _DS_ERRO,
+    (SELECT AD001_IT_ID FROM AD.AD001 WHERE AD001_VC_CNPJ = ENT_VC_CNPJ)
+  LOOP
+    RETURN NEXT _R;
+  END LOOP;
+
+  /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+  /*::                      EXCEPTION HANDLING POSTGRES                    ::*/
+  /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+EXCEPTION WHEN OTHERS THEN
+  _DS_ERRO   := SQLERRM;
+  _CD_ERRO   := -1;
+  FOR _R IN
+    SELECT
+      _CD_ERRO,
+      _DS_ERRO
+    LOOP
+      RETURN NEXT _R;
+  END LOOP;
+  RETURN;
+END
+$$ LANGUAGE PLPGSQL;

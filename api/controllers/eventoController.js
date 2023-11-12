@@ -5,7 +5,7 @@ module.exports = () => {
 
     controller.listarEventos = async (req, res) => {
         const response = await db.query (
-            "SELECT * FROM EV.EV001 ORDER BY EV001_IT_ID"
+            "SELECT * FROM EV.EV001 WHERE EV001_IT_SITUAC = 1 ORDER BY EV001_IT_ID"
         );
         res.status(200).send(response.rows);
     }

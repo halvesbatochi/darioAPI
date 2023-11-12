@@ -1,0 +1,68 @@
+SET SEARCH_PATH TO AD;
+
+DROP TYPE IF EXISTS PAD001004_RESULTSET CASCADE;
+
+CREATE TYPE PAD001004_RESULTSET AS (
+    CD_ERRO         NUMERIC(3),
+    DS_ERRO         VARCHAR(255),
+    AD002_IT_ID     INTEGER,
+    AD002_VC_LOGIN  VARCHAR
+);
+
+CREATE OR REPLACE FUNCTION PAD001004 (
+   /*-----------------------------------------------------------
+    Rotina para login de voluntários
+   ------------------------------------------------------------*/
+    ENT_NR_VRS       NUMERIC(5)  , /* Stored Procedure version */
+    ENT_VC_LOGIN     VARCHAR     , /* Login                    */
+    ENT_VC_SENHA     VARCHAR       /* Senha                    */
+)
+  RETURNS SETOF PAD001004_RESULTSET
+AS $$
+
+DECLARE
+    _R        AD.PAD001004_RESULTSET%Rowtype;
+    _CD_ERRO  NUMERIC;
+    _DS_ERRO  VARCHAR(255);
+    _IT_ID    INTEGER;
+
+BEGIN
+
+    _IT_ID := (SELECT AD002_IT_ID FROM AD.AD002 WHERE AD002_VC_LOGIN = ENT_VC_LOGIN AND AD002_VC_SENHA = ENT_VC_SENHA);
+
+    IF _IT_ID IS NULL THEN
+        RAISE EXCEPTION 'Login não localizado';
+    END IF;
+
+    _CD_ERRO := 0;
+    _DS_ERRO := 'OK';
+
+/*===========================================================================*/
+/*= RESULT SET                                                              =*/
+/*===========================================================================*/
+FOR _R IN
+  SELECT
+    _CD_ERRO,
+    _DS_ERRO,
+    _IT_ID,
+    ENT_VC_LOGIN
+  LOOP
+    RETURN NEXT _R;
+  END LOOP;
+
+  /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+  /*::                      EXCEPTION HANDLING POSTGRES                    ::*/
+  /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+EXCEPTION WHEN OTHERS THEN
+  _DS_ERRO   := SQLERRM;
+  _CD_ERRO   := -1;
+  FOR _R IN
+    SELECT
+      _CD_ERRO,
+      _DS_ERRO
+    LOOP
+      RETURN NEXT _R;
+  END LOOP;
+  RETURN;
+END
+$$ LANGUAGE PLPGSQL;

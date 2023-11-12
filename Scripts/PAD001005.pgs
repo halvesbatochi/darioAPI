@@ -1,0 +1,187 @@
+SET SEARCH_PATH TO AD;
+
+DROP TYPE IF EXISTS PAD001005_RESULTSET CASCADE;
+
+CREATE TYPE PAD001005_RESULTSET AS (
+    CD_ERRO       NUMERIC(3),
+    DS_ERRO       VARCHAR(255),
+    AD002_IT_ID   INTEGER
+);
+
+CREATE OR REPLACE FUNCTION PAD001005 (
+   /*-----------------------------------------------------------
+    Rotina para insert, update e delete de Voluntários.
+   ------------------------------------------------------------*/
+    ENT_NR_VRS       NUMERIC(5),   /* Stored procedure version   */
+    ENT_VC_ACTION    CHAR(1),      /* Action:                    */
+                                   /*    I - Insert              */
+                                   /*    U - Update              */
+                                   /*    D - Delete              */
+    ENT_IT_ID         INTEGER,     /* ID Voluntário              */
+    ENT_VC_NOME       VARCHAR,     /* Nome                       */
+    ENT_VC_SOBREN     VARCHAR,     /* Sobrenome                  */
+    ENT_VC_END        VARCHAR,     /* Endereço                   */
+    ENT_IT_NUM        NUMERIC,     /* Número                     */
+    ENT_VC_COMPL      VARCHAR(30), /* Complemento                */
+    ENT_VC_BAIRRO     VARCHAR,     /* Bairro                     */
+    ENT_VC_CIDADE     VARCHAR,     /* Cidade                     */
+    ENT_VC_CEP        VARCHAR(8),  /* CEP                        */
+    ENT_VC_ESTADO     VARCHAR(2),  /* Estado                     */
+    ENT_VC_EMAIL      VARCHAR,     /* Email                      */
+    ENT_VC_TELEF      VARCHAR,     /* Telefone                   */
+    ENT_VC_RG         VARCHAR,     /* RG                         */
+    ENT_VC_CPF        VARCHAR(11), /* CPF                        */
+    ENT_DT_NASC       NUMERIC(8,0),/* Data de nascimento         */
+    ENT_IT_SEXO       NUMERIC(2,0),/* Sexo                       */
+    ENT_VC_LOGIN      VARCHAR,     /* Login                      */
+    ENT_VC_SENHA      VARCHAR,     /* Senha                      */
+    ENT_IT_SITUAC     NUMERIC(2,0) /* Situação                   */
+)
+  RETURNS SETOF PAD001005_RESULTSET
+AS $$
+
+DECLARE
+    _R         AD.PAD001005_RESULTSET%Rowtype;
+    _CD_ERRO   NUMERIC;
+    _DS_ERRO   VARCHAR(255);
+
+BEGIN
+
+IF ENT_VC_ACTION = 'I' THEN
+
+    IF EXISTS (SELECT * FROM AD.AD002 WHERE AD002_VC_CPF = ENT_VC_CPF) THEN
+        RAISE EXCEPTION 'CPF JÁ CADASTRADO';
+    END IF;
+
+   INSERT INTO AD.AD002(
+        AD002_VC_NOME,
+        AD002_VC_SOBREN,
+        AD002_VC_END,
+        AD002_IT_NUM,
+        AD002_VC_COMPL,
+        AD002_VC_BAIRRO,
+        AD002_VC_CIDADE,
+        AD002_VC_CEP,
+        AD002_VC_ESTADO,
+        AD002_VC_PAIS,
+        AD002_VC_EMAIL,
+        AD002_VC_TELEF,
+        AD002_VC_RG,
+        AD002_VC_CPF,
+        AD002_DT_NASC,
+        AD002_IT_SEXO,
+        AD002_VC_LOGIN,
+        AD002_VC_SENHA,
+        AD002_IT_SITUAC,
+        AD002_DT_ULTATU,
+        AD002_DT_INCLUS
+    )
+    VALUES (ENT_VC_NOME,
+            ENT_VC_SOBREN,
+            ENT_VC_END,
+            ENT_IT_NUM,
+            ENT_VC_COMPL,
+            ENT_VC_BAIRRO,
+            ENT_VC_CIDADE,
+            ENT_VC_CEP,
+            ENT_VC_ESTADO,
+            'BR',
+            ENT_VC_EMAIL,
+            ENT_VC_TELEF,
+            ENT_VC_RG,
+            ENT_VC_CPF,
+            ENT_DT_NASC,
+            ENT_IT_SEXO,
+            ENT_VC_LOGIN,
+            ENT_VC_SENHA,
+            ENT_IT_SITUAC,
+            NOW(),
+            NOW());
+
+    _CD_ERRO := 0;
+    _DS_ERRO := 'OK';
+
+ELSIF ENT_VC_ACTION = 'U' THEN
+
+    IF ENT_IT_ID IS NULL OR ENT_IT_ID = 0 THEN
+        RAISE EXCEPTION 'INFORMAR O CÓDIGO DO VOLUNTÁRIO PARA ATUALIZAÇÃO';
+    END IF;
+
+    IF NOT EXISTS (SELECT * FROM AD.AD002 WHERE AD002_IT_ID = ENT_IT_ID) THEN
+        RAISE EXCEPTION 'VOLUNTÁRIO NÃO LOCALIZADA';
+    END IF;
+
+    UPDATE AD.AD002
+    SET AD002_VC_NOME = ENT_VC_NOME,
+        AD002_VC_SOBREN = ENT_VC_SOBREN,
+        AD002_VC_END = ENT_VC_END,
+        AD002_IT_NUM = ENT_IT_NUM,
+        AD002_VC_COMPL = ENT_VC_COMPL,
+        AD002_VC_BAIRRO = ENT_VC_BAIRRO,
+        AD002_VC_CIDADE = ENT_VC_CIDADE,
+        AD002_VC_CEP = ENT_VC_CEP,
+        AD002_VC_ESTADO = ENT_VC_ESTADO,
+        AD002_VC_EMAIL = ENT_VC_EMAIL,
+        AD002_VC_TELEF = ENT_VC_TELEF,
+        AD002_VC_RG = ENT_VC_RG,
+        AD002_DT_NASC = ENT_DT_NASC,
+        AD002_IT_SEXO =ENT_IT_SEXO,
+        AD002_VC_LOGIN = ENT_VC_LOGIN,
+        AD002_VC_SENHA = ENT_VC_SENHA,
+        AD002_IT_SITUAC = ENT_IT_SITUAC,
+        AD002_DT_ULTATU = NOW()
+    WHERE
+        AD002_IT_ID = ENT_IT_ID;
+
+    _CD_ERRO := 0;
+    _DS_ERRO := 'OK';
+
+ELSE
+
+    IF ENT_IT_ID IS NULL OR ENT_IT_ID = 0 THEN
+        RAISE EXCEPTION 'INFORMAR O CÓDIGO DO VOLUNTÁRIO PARA DESATIVAÇÃO';
+    END IF;
+
+    IF NOT EXISTS (SELECT * FROM AD.AD002 WHERE AD002_IT_ID = ENT_IT_ID) THEN
+        RAISE EXCEPTION 'VOLUNTÁRIO NÃO LOCALIZADO';
+    END IF;
+
+    UPDATE
+        AD.AD002
+    SET
+        AD002_IT_SITUAC = 0
+    WHERE
+        AD002_IT_ID = ENT_IT_ID;
+
+    _CD_ERRO := 0;
+    _DS_ERRO := 'OK';
+
+END IF;
+/*===========================================================================*/
+/*= RESULT SET                                                              =*/
+/*===========================================================================*/
+FOR _R IN
+  SELECT
+    _CD_ERRO,
+    _DS_ERRO,
+    (SELECT AD002_IT_ID FROM AD.AD002 WHERE AD002_VC_CPF = ENT_VC_CPF)
+  LOOP
+    RETURN NEXT _R;
+  END LOOP;
+
+  /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+  /*::                      EXCEPTION HANDLING POSTGRES                    ::*/
+  /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+EXCEPTION WHEN OTHERS THEN
+  _DS_ERRO   := SQLERRM;
+  _CD_ERRO   := -1;
+  FOR _R IN
+    SELECT
+      _CD_ERRO,
+      _DS_ERRO
+    LOOP
+      RETURN NEXT _R;
+  END LOOP;
+  RETURN;
+END
+$$ LANGUAGE PLPGSQL;
