@@ -5,6 +5,9 @@ module.exports = app => {
         .get(controller.listaAtuacoes);
 
     app.route('/atuac')
-    .post(controller.criarAtuacao);;
+        .post(controller.criarAtuacao);
+
+    app.route('/atuac')
+        .put(controller.atualizarAtuacao);
 
 }
