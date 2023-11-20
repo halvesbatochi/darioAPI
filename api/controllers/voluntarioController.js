@@ -12,7 +12,7 @@ module.exports = () => {
             [login, senha]
         );
 
-        res.status(200).send(response.rows);
+        res.status(200).send(response.rows[0]);
     }
 
     controller.cadastrarVoluntario = async (req, res) => {
