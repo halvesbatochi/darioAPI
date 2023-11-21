@@ -5,14 +5,14 @@ module.exports = () => {
 
     controller.listarEventos = async (req, res) => {
         const response = await db.query (
-            "SELECT * FROM EV.EV001 WHERE EV001_IT_SITUAC = 1 ORDER BY EV001_IT_ID"
+            "SELECT (SELECT AD001_VC_FANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), * FROM EV.EV001 WHERE EV001_IT_SITUAC = 1 ORDER BY EV001_IT_ID"
         );
         res.status(200).send(response.rows);
     }
 
     controller.listarEventosColdStart = async (req, res) => {
         const response = await db.query (
-            "SELECT * FROM EV.EV001 WHERE EV001_IT_SITUAC = 1 AND EV001_DT_INCLUS > CURRENT_DATE - INTERVAL '7 DAYS'"
+            "SELECT (SELECT AD001_VC_FANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), * FROM EV.EV001 WHERE EV001_IT_SITUAC = 1 AND EV001_DT_INCLUS > CURRENT_DATE - INTERVAL '7 DAYS'"
         );
         res.status(200).send(response.rows);
     }
@@ -24,7 +24,7 @@ module.exports = () => {
     controller.listarEventoId = async (req, res) => {
         const id = parseInt(req.params.id);
         const response = await db.query(
-            "SELECT * FROM EV.EV001 WHERE EV001_IT_ID = $1",
+            "SELECT (SELECT AD001_VC_FANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), * FROM EV.EV001 WHERE EV001_IT_ID = $1",
             [id]
         );
 
