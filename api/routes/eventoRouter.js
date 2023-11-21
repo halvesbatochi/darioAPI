@@ -7,6 +7,9 @@ module.exports = app => {
     app.route('/event/:id')
         .get(controller.listarEventoId);
 
+    app.route('/event/coldstart')
+        .get(controller.listarEventosColdStart);
+
     app.route('/event')
         .post(controller.cadastrarEvento);
 

@@ -10,6 +10,13 @@ module.exports = () => {
         res.status(200).send(response.rows);
     }
 
+    controller.listarEventosColdStart = async (req, res) => {
+        const response = await db.query (
+            "SELECT * FROM EV.EV001 WHERE EV001_IT_SITUAC = 1 AND EV001_DT_INCLUS > CURRENT_DATE - INTERVAL '7 DAYS'"
+        );
+        res.status(200).send(response.rows);
+    }
+
     controller.listarAlgoritmo = async (req, res) => {
         res.status(200).send({message: "AQUI VAI SER A CHAMADA DO ALGORITMO"});
     }
