@@ -5,7 +5,24 @@ module.exports = () => {
 
     controller.listarIntituicoes = async (req, res) => {
         const response = await db.query (
-            "SELECT * FROM AD.AD001 ORDER BY AD001_IT_ID"
+            `SELECT 
+                AD001_IT_ATUAC,
+                (SELECT AD003_VC_DESC FROM AD.AD003 WHERE AD003_IT_ID = AD001_IT_ATUAC),
+                AD001_IT_ID,
+                AD001_VC_NFANTA,
+                AD001_VC_LOGO,
+                AD001_VC_BAIRRO,
+                AD001_VC_CIDADE,
+                AD001_VC_BIOGRAF,
+                AD001_VC_EMAIL,
+                AD001_VC_TELEF
+             FROM 
+               AD.AD001
+             WHERE
+               AD001_IT_SITUAC = 1
+             ORDER BY 
+               AD001_IT_ID
+            `
         );
         res.status(200).send(response.rows);
     }
@@ -13,7 +30,23 @@ module.exports = () => {
     controller.listarInstituicaoId = async (req, res) => {
         const id = parseInt(req.params.id);
         const response = await db.query(
-            "SELECT * FROM AD.AD001 WHERE AD001_IT_ID = $1",
+            `
+            SELECT 
+              AD001_IT_ATUAC,
+              (SELECT AD003_VC_DESC FROM AD.AD003 WHERE AD003_IT_ID = AD001_IT_ATUAC),
+              AD001_IT_ID,
+              AD001_VC_NFANTA,
+              AD001_VC_LOGO,
+              AD001_VC_BAIRRO,
+              AD001_VC_CIDADE,
+              AD001_VC_BIOGRAF,
+              AD001_VC_EMAIL,
+              AD001_VC_TELEF
+            FROM 
+              AD.AD001 
+            WHERE 
+              AD001_IT_ID = $1
+            `,
             [id]
         );
 
