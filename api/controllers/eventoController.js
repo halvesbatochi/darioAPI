@@ -5,7 +5,16 @@ module.exports = () => {
 
     controller.listarEventos = async (req, res) => {
         const response = await db.query (
-            "SELECT (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), * FROM EV.EV001 WHERE EV001_IT_SITUAC = 1 ORDER BY EV001_IT_ID"
+            `SELECT 
+               (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), 
+               (SELECT AD001_VC_LOGO FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), 
+               * 
+            FROM 
+               EV.EV001 
+            WHERE 
+               EV001_IT_SITUAC = 1 
+            ORDER BY 
+               EV001_IT_ID`
         );
         res.status(200).send(response.rows);
     }
