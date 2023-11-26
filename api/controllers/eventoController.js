@@ -8,6 +8,8 @@ module.exports = () => {
             `SELECT 
                (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), 
                (SELECT AD001_VC_LOGO FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), 
+               (SELECT AD001_IT_ATUAC FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+               (SELECT A.AD003_VC_DESC FROM AD.AD001 I INNER JOIN AD.AD003 A ON (I.AD001_IT_ATUAC = A.AD003_IT_ID) WHERE AD001_IT_ID = EV001_IT_INST),  
                * 
             FROM 
                EV.EV001 
@@ -21,7 +23,19 @@ module.exports = () => {
 
     controller.listarEventosColdStart = async (req, res) => {
         const response = await db.query (
-            "SELECT (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), * FROM EV.EV001 WHERE EV001_IT_SITUAC = 1 AND EV001_DT_INCLUS > CURRENT_DATE - INTERVAL '7 DAYS'"
+            `SELECT 
+              (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+              (SELECT AD001_VC_LOGO FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), 
+              (SELECT AD001_IT_ATUAC FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+              (SELECT A.AD003_VC_DESC FROM AD.AD001 I INNER JOIN AD.AD003 A ON (I.AD001_IT_ATUAC = A.AD003_IT_ID) WHERE AD001_IT_ID = EV001_IT_INST),  
+               * 
+             FROM 
+               EV.EV001 
+             WHERE 
+               EV001_IT_SITUAC = 1 
+             AND 
+               EV001_DT_INCLUS > CURRENT_DATE - INTERVAL '7 DAYS'
+            `
         );
         res.status(200).send(response.rows);
     }
@@ -33,7 +47,16 @@ module.exports = () => {
     controller.listarEventoId = async (req, res) => {
         const id = parseInt(req.params.id);
         const response = await db.query(
-            "SELECT (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST), * FROM EV.EV001 WHERE EV001_IT_ID = $1",
+            `SELECT 
+              (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+              (SELECT AD001_VC_LOGO FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+              (SELECT AD001_IT_ATUAC FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+              (SELECT A.AD003_VC_DESC FROM AD.AD001 I INNER JOIN AD.AD003 A ON (I.AD001_IT_ATUAC = A.AD003_IT_ID) WHERE AD001_IT_ID = EV001_IT_INST),   
+               * 
+             FROM 
+               EV.EV001 
+             WHERE 
+               EV001_IT_ID = $1`,
             [id]
         );
 
