@@ -168,26 +168,25 @@ module.exports = () => {
 
     controller.inscreverEvento = async (req, res) => {
         const {
-            ENT_IT_ID,
-            ENT_IT_EVENTO,
             ENT_IT_ATIVID,
+            ENT_IT_EVENTO,
             ENT_IT_VOLUNT
         } = req.body;
 
         var command = "I";
 
         const response = await db.query(
-            "SELECT * FROM EV.PEV001001(1, $1, $2, $3, $4, $5)",
+            "SELECT * FROM EV.PEV001001(1, $1, null, $2, $3, $4)",
             [
                 command,
-                ENT_IT_ID,
                 ENT_IT_EVENTO,
                 ENT_IT_ATIVID,
                 ENT_IT_VOLUNT
             ]
         );
 
-        res.status(200).send(response.rows);
+        console.log(response.rows[0]);
+        res.status(200).send(response.rows[0]);
     }
 
     controller.atualizarInscreverEvento = async (req, res) => {
