@@ -15,6 +15,62 @@ module.exports = () => {
         res.status(200).send(response.rows[0]);
     }
 
+    controller.historicoVoluntario = async (req, res) => {
+        const id = req.params.id;
+
+        const response = await db.query (
+            `
+            select
+                (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+                (SELECT AD001_VC_LOGO FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+                (SELECT AD001_IT_ATUAC FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+                (SELECT A.AD003_VC_DESC FROM AD.AD001 I INNER JOIN AD.AD003 A ON (I.AD001_IT_ATUAC = A.AD003_IT_ID) WHERE AD001_IT_ID = EV001_IT_INST),
+                (SELECT EV002_VC_DESC AS EV001_VC_ATV1 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV1),
+                (SELECT EV002_VC_DESC AS EV001_VC_ATV2 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV2),
+                (SELECT EV002_VC_DESC AS EV001_VC_ATV3 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV3),
+                ev001_it_id,
+                ev001_it_inst,
+                ev001_vc_end,
+                ev001_it_num,
+                ev001_vc_compl,
+                ev001_vc_bairro,
+                ev001_vc_cidade,
+                ev001_vc_estado,
+                ev001_vc_pais,
+                ev001_vc_titulo,
+                ev001_dt_inic,
+                ev001_hr_inic,
+                ev001_dt_fim,
+                ev001_hr_fim,
+                ev001_it_npart,
+                ev001_vc_fmsg1,
+                ev001_vc_fmsg2,
+                ev001_vc_fmsg3,
+                ev001_vc_fmsg4,
+                ev001_vc_fmsg5,
+                ev001_vc_pmsg1,
+                ev001_vc_pmsg2,
+                ev001_vc_img1,
+                ev001_vc_img2,
+                ev001_it_atv1,
+                ev001_it_atv2,
+                ev001_it_atv3,
+                ev001_it_situac,
+                ev001_dt_ultatu,
+                ev001_dt_inclus
+            FROM 
+              ev.ev001 a inner join ev.ev003 b on (a.ev001_it_id = b.ev003_it_evento) 
+            where 
+                ev003_it_situac = 1
+            and ev003_it_volunt = $1
+            order by
+                ev003_dt_ultatu;`,
+        [id]
+        );
+
+        res.status(200).send(response.rows);
+    }
+
     controller.cadastrarVoluntario = async (req, res) => {
         const {
             ENT_IT_ID,
@@ -184,8 +240,6 @@ module.exports = () => {
                 ENT_IT_VOLUNT
             ]
         );
-
-        console.log(response.rows[0]);
         res.status(200).send(response.rows[0]);
     }
 

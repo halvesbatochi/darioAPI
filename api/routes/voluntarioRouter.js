@@ -22,4 +22,7 @@ module.exports = app => {
     app.route('/volunt/insc')
         .delete(controller.deletarInscricaoEvento);
 
+    app.route('/volunthist/:id')
+        .get(controller.historicoVoluntario)
+
 }
