@@ -37,7 +37,7 @@ module.exports = () => {
             ]
         );
 
-        res.status(200).send({"cd_erro":"0","ds_erro":"OK"});
+        res.status(200).send({"cd_erro":0,"ds_erro":"OK"});
 
     }
     return controller;
