@@ -26,6 +26,11 @@ module.exports = () => {
             ENT_IT_VOLUNT
         } = req.body;
 
+        const limpa = await db.query (
+          `delete from ad.ad005 where ad005_it_volunt = $1`,
+          [ENT_IT_VOLUNT]
+        )
+
         const response = await db.query (
             `
             INSERT INTO AD.AD005(AD005_IT_VOLUNT, AD005_IT_PREFER, AD005_DT_ULTATU, AD005_DT_INCLUS)
