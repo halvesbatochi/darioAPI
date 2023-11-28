@@ -18,5 +18,27 @@ module.exports = () => {
         )
         res.status(200).send(response.rows);
     }
+
+    controller.gravarPreferencia = async (req, res) => {
+
+        const {
+            ENT_IT_PREF,
+            ENT_IT_VOLUNT
+        } = req.body;
+
+        const response = await db.query (
+            `
+            INSERT INTO AD.AD005(AD005_IT_VOLUNT, AD005_IT_PREFER, AD005_DT_ULTATU, AD005_DT_INCLUS)
+            VALUES ($1, $2, NOW(), NOW())
+            `,
+            [   
+            ENT_IT_VOLUNT,
+            ENT_IT_PREF
+            ]
+        );
+
+        res.status(200).send({"cd_erro":"0","ds_erro":"OK"});
+
+    }
     return controller;
 }

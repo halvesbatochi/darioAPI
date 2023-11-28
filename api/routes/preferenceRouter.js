@@ -3,4 +3,7 @@ module.exports = app => {
 
     app.route('/preference')
         .get(controller.listarPreferencias)
+
+    app.route('/preference')
+        .post(controller.gravarPreferencia)
 }
