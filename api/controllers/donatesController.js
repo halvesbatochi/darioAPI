@@ -11,6 +11,7 @@ module.exports = () => {
             (SELECT AD001_VC_BAIRRO  FROM AD.AD001 WHERE AD001_IT_ID = EV005_IT_IDINST),
             (SELECT AD001_VC_CIDADE  FROM AD.AD001 WHERE AD001_IT_ID = EV005_IT_IDINST),
             EV005_IT_ID,
+            EV005_IT_INST,
             EV005_VC_METOD,
             EV005_VC_DESC,
             EV005_VC_DESCAUX
