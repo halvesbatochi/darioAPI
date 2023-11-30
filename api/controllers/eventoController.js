@@ -46,8 +46,14 @@ module.exports = () => {
         res.status(200).send(response.rows);
     }
 
-    controller.listarAlgoritmo = async (req, res) => {
-        res.status(200).send({message: "AQUI VAI SER A CHAMADA DO ALGORITMO"});
+    controller.listarAlgoritmoCosine = async (req, res) => {
+        const id = parseInt(req.params.id);
+
+        const response = await db.query (
+            `SELECT * FROM EV.PEV001002(1, $1)`,
+            [id]
+        )
+        res.status(200).send(response.rows);
     }
 
     controller.listarEventoId = async (req, res) => {

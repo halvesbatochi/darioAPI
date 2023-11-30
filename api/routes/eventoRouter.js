@@ -10,6 +10,9 @@ module.exports = app => {
     app.route('/eventcoldstart')
         .get(controller.listarEventosColdStart);
 
+    app.route('/cosinesimilarity/:id')
+        .get(controller.listarAlgoritmoCosine);
+
     app.route('/event')
         .post(controller.cadastrarEvento);
 
