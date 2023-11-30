@@ -243,6 +243,30 @@ module.exports = () => {
         res.status(200).send(response.rows[0]);
     }
 
+    controller.cadastrarVisita = async (req, res) => {
+        const {
+            ENT_IT_VOLUNT,
+            ENT_IT_EVENT,
+            ENT_IT_ATUAC,
+            ENT_IT_ATV1,
+            ENT_IT_ATV2,
+            ENT_IT_ATV3
+        } = req.body
+
+        const response = await db.query (
+            `INSERT INTO EV.EV006 VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [
+                ENT_IT_VOLUNT,
+                ENT_IT_EVENT,
+                ENT_IT_ATUAC,
+                ENT_IT_ATV1,
+                ENT_IT_ATV2,
+                ENT_IT_ATV3
+            ]
+        );
+        res.status(200).send({"DS_ERRO":"Visita cadastrada"})
+    }
+
     controller.atualizarInscreverEvento = async (req, res) => {
         const {
             ENT_IT_ID,

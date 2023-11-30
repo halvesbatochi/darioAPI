@@ -7,6 +7,9 @@ module.exports = app => {
     app.route('/volunt')
         .post(controller.cadastrarVoluntario);
 
+    app.route('/voluntvisit')
+        .post(controller.cadastrarVisita);
+
     app.route('/volunt')
         .put(controller.atualizarVoluntario);
 
