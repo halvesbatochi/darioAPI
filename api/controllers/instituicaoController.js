@@ -53,6 +53,23 @@ module.exports = () => {
         res.status(200).send(response.rows);
     }
 
+    controller.listarTudoInstituicao = async (req, res) => {
+        const id = parseInt(req.params.id);
+        const response = await db.query(
+            `
+            SELECT 
+              *
+            FROM 
+              AD.AD001 
+            WHERE 
+              AD001_IT_ID = $1
+            `,
+            [id]
+        );
+
+        res.status(200).send(response.rows);
+    }
+
     controller.login = async (req, res) => {
         const login = req.params.login;
         const senha = req.params.senha;

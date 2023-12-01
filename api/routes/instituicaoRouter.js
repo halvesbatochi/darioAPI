@@ -15,4 +15,7 @@ module.exports = app => {
 
     app.route('/inst')
         .put(controller.atualizarInstituicao);
+
+    app.route('/adm/inst/:id')
+        .get(controller.listarTudoInstituicao);
 }
