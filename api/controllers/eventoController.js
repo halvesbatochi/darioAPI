@@ -40,7 +40,8 @@ module.exports = () => {
              WHERE 
                  EV001_IT_SITUAC = 1 
              AND EV001_DT_INCLUS > CURRENT_DATE - INTERVAL '7 DAYS'
-             ORDER BY EV001_DT_ULTATU
+             ORDER BY EV001_DT_ULTATU DESC
+             LIMIT 3
             `
         );
         res.status(200).send(response.rows);
