@@ -38,9 +38,9 @@ module.exports = () => {
              FROM 
                EV.EV001 
              WHERE 
-               EV001_IT_SITUAC = 1 
-             AND 
-               EV001_DT_INCLUS > CURRENT_DATE - INTERVAL '7 DAYS'
+                 EV001_IT_SITUAC = 1 
+             AND EV001_DT_INCLUS > CURRENT_DATE - INTERVAL '7 DAYS'
+             ORDER BY EV001_DT_ULTATU
             `
         );
         res.status(200).send(response.rows);

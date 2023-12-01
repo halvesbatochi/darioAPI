@@ -63,6 +63,8 @@ DECLARE
     _ATIV2    INTEGER;
     _ATIV3    INTEGER;
     _VECTOR   public.VECTOR(3);
+    _OCCUR    INTEGER;
+    _PREFER   INTEGER;
 
 BEGIN
 
@@ -128,7 +130,18 @@ BEGIN
       EV001_DT_INCLUS TIMESTAMP
     );
 
-    _ATUAC := (SELECT
+    _OCCUR := (SELECT
+                COUNT(*)
+               FROM
+                 EV.EV006
+               WHERE EV006_IT_VOLUNT = ENT_IT_ID
+              );
+
+    IF (_OCCUR >= 10) THEN
+
+        RAISE NOTICE 'ATRAVÉS DAS VISUALIZAÇÕES';
+
+        _ATUAC := (SELECT
                 EV006_IT_ATUAC
               FROM (
 
@@ -142,168 +155,333 @@ BEGIN
                   GROUP BY EV006_IT_ATUAC
                   ORDER BY CNT DESC LIMIT 1) T);
 
-    _ATIV1 := (SELECT
-                EV006_IT_ATV1
-               FROM (
+        _ATIV1 := (SELECT
+                    EV006_IT_ATV1
+                  FROM (
 
-                  SELECT
-                    EV006_IT_ATV1,
-                    COUNT(EV006_IT_ATV1) AS CNT
-                  FROM
-                    EV.EV006
-                  WHERE
-                    EV006_IT_VOLUNT = ENT_IT_ID
-                  GROUP BY EV006_IT_ATV1
-                  ORDER BY CNT DESC LIMIT 1) T);
+                      SELECT
+                        EV006_IT_ATV1,
+                        COUNT(EV006_IT_ATV1) AS CNT
+                      FROM
+                        EV.EV006
+                      WHERE
+                        EV006_IT_VOLUNT = ENT_IT_ID
+                      GROUP BY EV006_IT_ATV1
+                      ORDER BY CNT DESC LIMIT 1) T);
 
-    _ATIV2 := (SELECT
-                EV006_IT_ATV2
-               FROM (
+        _ATIV2 := (SELECT
+                    EV006_IT_ATV2
+                  FROM (
 
-                  SELECT
-                    EV006_IT_ATV2,
-                    COUNT(EV006_IT_ATV2) AS CNT
-                  FROM
-                    EV.EV006
-                  WHERE
-                    EV006_IT_VOLUNT = ENT_IT_ID
-                  GROUP BY EV006_IT_ATV2
-                  ORDER BY CNT DESC LIMIT 1) T);
+                      SELECT
+                        EV006_IT_ATV2,
+                        COUNT(EV006_IT_ATV2) AS CNT
+                      FROM
+                        EV.EV006
+                      WHERE
+                        EV006_IT_VOLUNT = ENT_IT_ID
+                      GROUP BY EV006_IT_ATV2
+                      ORDER BY CNT DESC LIMIT 1) T);
 
-    _ATIV3 := (SELECT
-                EV006_IT_ATV3
-               FROM (
+        _ATIV3 := (SELECT
+                    EV006_IT_ATV3
+                  FROM (
 
-                  SELECT
-                    EV006_IT_ATV3,
-                    COUNT(EV006_IT_ATV3) AS CNT
-                  FROM
-                    EV.EV006
-                  WHERE
-                    EV006_IT_VOLUNT = ENT_IT_ID
-                  GROUP BY EV006_IT_ATV3
-                  ORDER BY CNT DESC LIMIT 1) T);
+                      SELECT
+                        EV006_IT_ATV3,
+                        COUNT(EV006_IT_ATV3) AS CNT
+                      FROM
+                        EV.EV006
+                      WHERE
+                        EV006_IT_VOLUNT = ENT_IT_ID
+                      GROUP BY EV006_IT_ATV3
+                      ORDER BY CNT DESC LIMIT 1) T);
 
-    _VECTOR := ARRAY[_ATUAC,
-                     LEAST(_ATIV1, _ATIV2, _ATIV3),
-                     (_ATIV1 + _ATIV2 + _ATIV3) - LEAST(_ATIV1, _ATIV2, _ATIV3) - GREATEST(_ATIV1, _ATIV2, _ATIV3)
-                    ]::INT[];
+        _VECTOR := ARRAY[_ATUAC,
+                        LEAST(_ATIV1, _ATIV2, _ATIV3),
+                        (_ATIV1 + _ATIV2 + _ATIV3) - LEAST(_ATIV1, _ATIV2, _ATIV3) - GREATEST(_ATIV1, _ATIV2, _ATIV3)
+                        ]::INT[];
 
-    INSERT INTO EVENTS (ID, INST, EVENTO, VECTOR, ATUAC, ATV1, ATV2, ATV3)
-    (SELECT
-      ROW_NUMBER() OVER (ORDER BY EV001_DT_ULTATU),
-      AD001_IT_ID,
-      EV001_IT_ID,
-      ARRAY[AD001_IT_ATUAC, EV001_IT_ATV1, EV001_IT_ATV2]::INT[],
-      AD001_IT_ATUAC,
-      EV001_IT_ATV1,
-      EV001_IT_ATV2,
-      EV001_IT_ATV3
-    FROM
-      EV.EV001 E INNER JOIN AD.AD001 I ON (E.EV001_IT_INST = I.AD001_IT_ID));
+        INSERT INTO EVENTS (ID, INST, EVENTO, VECTOR, ATUAC, ATV1, ATV2, ATV3)
+        (SELECT
+          ROW_NUMBER() OVER (ORDER BY EV001_DT_ULTATU),
+          AD001_IT_ID,
+          EV001_IT_ID,
+          ARRAY[AD001_IT_ATUAC, EV001_IT_ATV1, EV001_IT_ATV2]::INT[],
+          AD001_IT_ATUAC,
+          EV001_IT_ATV1,
+          EV001_IT_ATV2,
+          EV001_IT_ATV3
+        FROM
+          EV.EV001 E INNER JOIN AD.AD001 I ON (E.EV001_IT_INST = I.AD001_IT_ID AND E.EV001_IT_SITUAC = 1));
 
-    RAISE NOTICE '%', _VECTOR;
+        RAISE NOTICE '%', _VECTOR;
 
-    INSERT INTO SIMILARIDADE (ID, INST, NFANTA, EVENTO, NEVENTO, VECTOR, SIMILARITY, TEXTOSIMILAR)
-    (
-      SELECT
-        ID,
-        INST,
-        AD001_VC_NFANTA,
-        EVENTO,
-        EV001_VC_TITULO,
-        VECTOR,
-        (1-(public.cosine_distance(VECTOR, _VECTOR))),
-        public.similarity(array_to_string(ARRAY[ATUAC, ATV1, ATV2], ',', '*'), (array_to_string(ARRAY[_ATUAC, _ATIV1, _ATIV2], ',', '*')))
-      FROM
-        EVENTS V INNER JOIN AD.AD001 I ON (V.INST = I.AD001_IT_ID)
-                 INNER JOIN EV.EV001 E ON (EVENTO = E.EV001_IT_ID)
-      ORDER BY
-        (1-( public.cosine_distance(VECTOR, _VECTOR))) DESC
-      LIMIT 3
-    );
+        INSERT INTO SIMILARIDADE (ID, INST, NFANTA, EVENTO, NEVENTO, VECTOR, SIMILARITY, TEXTOSIMILAR)
+        (
+          SELECT
+            ID,
+            INST,
+            AD001_VC_NFANTA,
+            EVENTO,
+            EV001_VC_TITULO,
+            VECTOR,
+            (1-(public.cosine_distance(VECTOR, _VECTOR))),
+            public.similarity(array_to_string(ARRAY[ATUAC, ATV1, ATV2], ',', '*'), (array_to_string(ARRAY[_ATUAC, _ATIV1, _ATIV2], ',', '*')))
+          FROM
+            EVENTS V INNER JOIN AD.AD001 I ON (V.INST = I.AD001_IT_ID)
+                    INNER JOIN EV.EV001 E ON (EVENTO = E.EV001_IT_ID AND E.EV001_IT_SITUAC = 1)
+          ORDER BY
+            (1-( public.cosine_distance(VECTOR, _VECTOR))) DESC
+          LIMIT 3
+        );
 
-    INSERT INTO EVENTOSFINAIS (
-      AD001_VC_NFANTA ,
-      AD001_VC_LOGO   ,
-      AD001_IT_ATUAC  ,
-      AD003_VC_DESC   ,
-      EV001_VC_ATV1   ,
-      EV001_VC_ATV2   ,
-      EV001_VC_ATV3   ,
-      EV001_IT_ID     ,
-      EV001_IT_INST   ,
-      EV001_VC_END    ,
-      EV001_IT_NUM    ,
-      EV001_VC_COMPL  ,
-      EV001_VC_BAIRRO ,
-      EV001_VC_CIDADE ,
-      EV001_VC_ESTADO ,
-      EV001_VC_PAIS   ,
-      EV001_VC_TITULO ,
-      EV001_DT_INIC   ,
-      EV001_HR_INIC   ,
-      EV001_DT_FIM    ,
-      EV001_HR_FIM    ,
-      EV001_IT_NPART  ,
-      EV001_VC_FMSG1  ,
-      EV001_VC_FMSG2  ,
-      EV001_VC_FMSG3  ,
-      EV001_VC_FMSG4  ,
-      EV001_VC_FMSG5  ,
-      EV001_VC_PMSG1  ,
-      EV001_VC_PMSG2  ,
-      EV001_VC_IMG1   ,
-      EV001_VC_IMG2   ,
-      EV001_IT_ATV1   ,
-      EV001_IT_ATV2   ,
-      EV001_IT_ATV3   ,
-      EV001_IT_SITUAC ,
-      EV001_DT_ULTATU ,
-      EV001_DT_INCLUS )
-    (
+        INSERT INTO EVENTOSFINAIS (
+          AD001_VC_NFANTA ,
+          AD001_VC_LOGO   ,
+          AD001_IT_ATUAC  ,
+          AD003_VC_DESC   ,
+          EV001_VC_ATV1   ,
+          EV001_VC_ATV2   ,
+          EV001_VC_ATV3   ,
+          EV001_IT_ID     ,
+          EV001_IT_INST   ,
+          EV001_VC_END    ,
+          EV001_IT_NUM    ,
+          EV001_VC_COMPL  ,
+          EV001_VC_BAIRRO ,
+          EV001_VC_CIDADE ,
+          EV001_VC_ESTADO ,
+          EV001_VC_PAIS   ,
+          EV001_VC_TITULO ,
+          EV001_DT_INIC   ,
+          EV001_HR_INIC   ,
+          EV001_DT_FIM    ,
+          EV001_HR_FIM    ,
+          EV001_IT_NPART  ,
+          EV001_VC_FMSG1  ,
+          EV001_VC_FMSG2  ,
+          EV001_VC_FMSG3  ,
+          EV001_VC_FMSG4  ,
+          EV001_VC_FMSG5  ,
+          EV001_VC_PMSG1  ,
+          EV001_VC_PMSG2  ,
+          EV001_VC_IMG1   ,
+          EV001_VC_IMG2   ,
+          EV001_IT_ATV1   ,
+          EV001_IT_ATV2   ,
+          EV001_IT_ATV3   ,
+          EV001_IT_SITUAC ,
+          EV001_DT_ULTATU ,
+          EV001_DT_INCLUS )
+        (
 
-      SELECT
-        (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
-        (SELECT AD001_VC_LOGO FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
-        (SELECT AD001_IT_ATUAC FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
-        (SELECT A.AD003_VC_DESC FROM AD.AD001 I INNER JOIN AD.AD003 A ON (I.AD001_IT_ATUAC = A.AD003_IT_ID) WHERE AD001_IT_ID = EV001_IT_INST),
-        (SELECT EV002_VC_DESC AS EV001_VC_ATV1 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV1),
-        (SELECT EV002_VC_DESC AS EV001_VC_ATV2 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV2),
-        (SELECT EV002_VC_DESC AS EV001_VC_ATV3 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV3),
-        EV001_IT_ID     ,
-        EV001_IT_INST   ,
-        EV001_VC_END    ,
-        EV001_IT_NUM    ,
-        EV001_VC_COMPL  ,
-        EV001_VC_BAIRRO ,
-        EV001_VC_CIDADE ,
-        EV001_VC_ESTADO ,
-        EV001_VC_PAIS   ,
-        EV001_VC_TITULO ,
-        EV001_DT_INIC   ,
-        EV001_HR_INIC   ,
-        EV001_DT_FIM    ,
-        EV001_HR_FIM    ,
-        EV001_IT_NPART  ,
-        EV001_VC_FMSG1  ,
-        EV001_VC_FMSG2  ,
-        EV001_VC_FMSG3  ,
-        EV001_VC_FMSG4  ,
-        EV001_VC_FMSG5  ,
-        EV001_VC_PMSG1  ,
-        EV001_VC_PMSG2  ,
-        EV001_VC_IMG1   ,
-        EV001_VC_IMG2   ,
-        EV001_IT_ATV1   ,
-        EV001_IT_ATV2   ,
-        EV001_IT_ATV3   ,
-        EV001_IT_SITUAC ,
-        EV001_DT_ULTATU ,
-        EV001_DT_INCLUS
-      FROM
-        EV.EV001 E INNER JOIN SIMILARIDADE S ON (E.EV001_IT_ID = S.EVENTO)
-    );
+          SELECT
+            (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+            (SELECT AD001_VC_LOGO FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+            (SELECT AD001_IT_ATUAC FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+            (SELECT A.AD003_VC_DESC FROM AD.AD001 I INNER JOIN AD.AD003 A ON (I.AD001_IT_ATUAC = A.AD003_IT_ID) WHERE AD001_IT_ID = EV001_IT_INST),
+            (SELECT EV002_VC_DESC AS EV001_VC_ATV1 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV1),
+            (SELECT EV002_VC_DESC AS EV001_VC_ATV2 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV2),
+            (SELECT EV002_VC_DESC AS EV001_VC_ATV3 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV3),
+            EV001_IT_ID     ,
+            EV001_IT_INST   ,
+            EV001_VC_END    ,
+            EV001_IT_NUM    ,
+            EV001_VC_COMPL  ,
+            EV001_VC_BAIRRO ,
+            EV001_VC_CIDADE ,
+            EV001_VC_ESTADO ,
+            EV001_VC_PAIS   ,
+            EV001_VC_TITULO ,
+            EV001_DT_INIC   ,
+            EV001_HR_INIC   ,
+            EV001_DT_FIM    ,
+            EV001_HR_FIM    ,
+            EV001_IT_NPART  ,
+            EV001_VC_FMSG1  ,
+            EV001_VC_FMSG2  ,
+            EV001_VC_FMSG3  ,
+            EV001_VC_FMSG4  ,
+            EV001_VC_FMSG5  ,
+            EV001_VC_PMSG1  ,
+            EV001_VC_PMSG2  ,
+            EV001_VC_IMG1   ,
+            EV001_VC_IMG2   ,
+            EV001_IT_ATV1   ,
+            EV001_IT_ATV2   ,
+            EV001_IT_ATV3   ,
+            EV001_IT_SITUAC ,
+            EV001_DT_ULTATU ,
+            EV001_DT_INCLUS
+          FROM
+            EV.EV001 E INNER JOIN SIMILARIDADE S ON (E.EV001_IT_ID = S.EVENTO)
+        );
+
+    ELSE
+
+      RAISE NOTICE 'ATRAVÉS DAS PREFERENCIAS';
+
+      _PREFER := (SELECT AD005_IT_PREFER FROM AD.AD005 WHERE AD005_IT_VOLUNT = ENT_IT_ID);
+
+      _ATIV1 := (SELECT
+                    EV006_IT_ATV1
+                  FROM (
+
+                      SELECT
+                        EV006_IT_ATV1,
+                        COUNT(EV006_IT_ATV1) AS CNT
+                      FROM
+                        EV.EV006
+                      GROUP BY EV006_IT_ATV1
+                      ORDER BY CNT DESC LIMIT 1) T);
+
+        _ATIV2 := (SELECT
+                    EV006_IT_ATV2
+                  FROM (
+
+                      SELECT
+                        EV006_IT_ATV2,
+                        COUNT(EV006_IT_ATV2) AS CNT
+                      FROM
+                        EV.EV006
+                      GROUP BY EV006_IT_ATV2
+                      ORDER BY CNT DESC LIMIT 1) T);
+
+        _ATIV3 := (SELECT
+                    EV006_IT_ATV3
+                  FROM (
+
+                      SELECT
+                        EV006_IT_ATV3,
+                        COUNT(EV006_IT_ATV3) AS CNT
+                      FROM
+                        EV.EV006
+                      GROUP BY EV006_IT_ATV3
+                      ORDER BY CNT DESC LIMIT 1) T);
+
+        _VECTOR := ARRAY[_PREFER,
+                        LEAST(_ATIV1, _ATIV2, _ATIV3),
+                        (_ATIV1 + _ATIV2 + _ATIV3) - LEAST(_ATIV1, _ATIV2, _ATIV3) - GREATEST(_ATIV1, _ATIV2, _ATIV3)
+                        ]::INT[];
+
+        INSERT INTO EVENTS (ID, INST, EVENTO, VECTOR, ATUAC, ATV1, ATV2, ATV3)
+        (SELECT
+          ROW_NUMBER() OVER (ORDER BY EV001_DT_ULTATU),
+          AD001_IT_ID,
+          EV001_IT_ID,
+          ARRAY[AD001_IT_ATUAC, EV001_IT_ATV1, EV001_IT_ATV2]::INT[],
+          AD001_IT_ATUAC,
+          EV001_IT_ATV1,
+          EV001_IT_ATV2,
+          EV001_IT_ATV3
+        FROM
+          EV.EV001 E INNER JOIN AD.AD001 I ON (E.EV001_IT_INST = I.AD001_IT_ID AND E.EV001_IT_SITUAC = 1));
+
+        RAISE NOTICE '%', _VECTOR;
+
+        INSERT INTO SIMILARIDADE (ID, INST, NFANTA, EVENTO, NEVENTO, VECTOR, SIMILARITY, TEXTOSIMILAR)
+        (
+          SELECT
+            ID,
+            INST,
+            AD001_VC_NFANTA,
+            EVENTO,
+            EV001_VC_TITULO,
+            VECTOR,
+            (1-(public.cosine_distance(VECTOR, _VECTOR))),
+            public.similarity(array_to_string(ARRAY[ATUAC, ATV1, ATV2], ',', '*'), (array_to_string(ARRAY[_ATUAC, _ATIV1, _ATIV2], ',', '*')))
+          FROM
+            EVENTS V INNER JOIN AD.AD001 I ON (V.INST = I.AD001_IT_ID)
+                    INNER JOIN EV.EV001 E ON (EVENTO = E.EV001_IT_ID AND E.EV001_IT_SITUAC = 1)
+          ORDER BY
+            (1-( public.cosine_distance(VECTOR, _VECTOR))) DESC
+          LIMIT 3
+        );
+
+        INSERT INTO EVENTOSFINAIS (
+          AD001_VC_NFANTA ,
+          AD001_VC_LOGO   ,
+          AD001_IT_ATUAC  ,
+          AD003_VC_DESC   ,
+          EV001_VC_ATV1   ,
+          EV001_VC_ATV2   ,
+          EV001_VC_ATV3   ,
+          EV001_IT_ID     ,
+          EV001_IT_INST   ,
+          EV001_VC_END    ,
+          EV001_IT_NUM    ,
+          EV001_VC_COMPL  ,
+          EV001_VC_BAIRRO ,
+          EV001_VC_CIDADE ,
+          EV001_VC_ESTADO ,
+          EV001_VC_PAIS   ,
+          EV001_VC_TITULO ,
+          EV001_DT_INIC   ,
+          EV001_HR_INIC   ,
+          EV001_DT_FIM    ,
+          EV001_HR_FIM    ,
+          EV001_IT_NPART  ,
+          EV001_VC_FMSG1  ,
+          EV001_VC_FMSG2  ,
+          EV001_VC_FMSG3  ,
+          EV001_VC_FMSG4  ,
+          EV001_VC_FMSG5  ,
+          EV001_VC_PMSG1  ,
+          EV001_VC_PMSG2  ,
+          EV001_VC_IMG1   ,
+          EV001_VC_IMG2   ,
+          EV001_IT_ATV1   ,
+          EV001_IT_ATV2   ,
+          EV001_IT_ATV3   ,
+          EV001_IT_SITUAC ,
+          EV001_DT_ULTATU ,
+          EV001_DT_INCLUS )
+        (
+
+          SELECT
+            (SELECT AD001_VC_NFANTA FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+            (SELECT AD001_VC_LOGO FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+            (SELECT AD001_IT_ATUAC FROM AD.AD001 WHERE AD001_IT_ID = EV001_IT_INST),
+            (SELECT A.AD003_VC_DESC FROM AD.AD001 I INNER JOIN AD.AD003 A ON (I.AD001_IT_ATUAC = A.AD003_IT_ID) WHERE AD001_IT_ID = EV001_IT_INST),
+            (SELECT EV002_VC_DESC AS EV001_VC_ATV1 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV1),
+            (SELECT EV002_VC_DESC AS EV001_VC_ATV2 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV2),
+            (SELECT EV002_VC_DESC AS EV001_VC_ATV3 FROM EV.EV002 WHERE EV002_IT_ID = EV001_IT_ATV3),
+            EV001_IT_ID     ,
+            EV001_IT_INST   ,
+            EV001_VC_END    ,
+            EV001_IT_NUM    ,
+            EV001_VC_COMPL  ,
+            EV001_VC_BAIRRO ,
+            EV001_VC_CIDADE ,
+            EV001_VC_ESTADO ,
+            EV001_VC_PAIS   ,
+            EV001_VC_TITULO ,
+            EV001_DT_INIC   ,
+            EV001_HR_INIC   ,
+            EV001_DT_FIM    ,
+            EV001_HR_FIM    ,
+            EV001_IT_NPART  ,
+            EV001_VC_FMSG1  ,
+            EV001_VC_FMSG2  ,
+            EV001_VC_FMSG3  ,
+            EV001_VC_FMSG4  ,
+            EV001_VC_FMSG5  ,
+            EV001_VC_PMSG1  ,
+            EV001_VC_PMSG2  ,
+            EV001_VC_IMG1   ,
+            EV001_VC_IMG2   ,
+            EV001_IT_ATV1   ,
+            EV001_IT_ATV2   ,
+            EV001_IT_ATV3   ,
+            EV001_IT_SITUAC ,
+            EV001_DT_ULTATU ,
+            EV001_DT_INCLUS
+          FROM
+            EV.EV001 E INNER JOIN SIMILARIDADE S ON (E.EV001_IT_ID = S.EVENTO)
+        );
+
+    END IF;
 
 /*===========================================================================*/
 /*= RESULT SET                                                              =*/
